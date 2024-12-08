@@ -99,7 +99,7 @@ class VideoCamera():
             elif is_coral_dev_board:
                 # On Coral dev board, use mouse plugged into USB port beside ethernet connector
                 self.key_select = select.poll()
-                self.input_dev = InputDevice('/dev/input/event1')
+                self.input_dev = InputDevice('/dev/video1')
                 self.key_select.register(self.input_dev, select.POLLIN)
             else:
                 raise Exception("Unsupported platform")
