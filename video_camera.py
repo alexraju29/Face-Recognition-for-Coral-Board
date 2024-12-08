@@ -31,7 +31,7 @@ from cv2 import VideoCapture, \
                 waitKey
 
 from numpy import array as np_array
-from evdev import InputDevice, ecodes
+#from evdev import InputDevice, ecodes
 
 from face_detector import FaceDetector
 from face_detection_engine import FaceDetectionMethodEnum
@@ -99,7 +99,7 @@ class VideoCamera():
             elif is_coral_dev_board:
                 # On Coral dev board, use mouse plugged into USB port beside ethernet connector
                 self.key_select = select.poll()
-                self.input_dev = InputDevice('/dev/input/event2')
+                self.input_dev = InputDevice('/dev/input/event1')
                 self.key_select.register(self.input_dev, select.POLLIN)
             else:
                 raise Exception("Unsupported platform")

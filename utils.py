@@ -102,7 +102,7 @@ platform = platform.platform()
 print("Running on platform: {}".format(platform))
 
 # publish flags indicating what platform we're currently running on
-UBUNTU_FINGER_PRINT = "x86_64-with-Ubuntu"
+UBUNTU_FINGER_PRINT = "Linux-6.8.0-49-generic-x86_64-with-debian-trixie-sid"
 CORAL_DEV_BOARD_FINGER_PRINT = "aarch64-with-Mendel"
 is_ubuntu_64 = UBUNTU_FINGER_PRINT in platform
 is_coral_dev_board = CORAL_DEV_BOARD_FINGER_PRINT in platform
