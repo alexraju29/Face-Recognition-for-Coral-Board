@@ -7,7 +7,7 @@
 import time
 import argparse
 from flask import Flask, render_template, Response
-from video_camera import VideoCamera
+from video_camera import VideoCamera, VideoCameraForCapture
 
 app = Flask(__name__)
 
@@ -67,15 +67,15 @@ def video_feed_for_capture():
     returns:
         jpg frames produced by our video frame generator
     '''
-    return Response(gen(VideoCamera()),
+    return Response(gen(VideoCameraForCapture()),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 
-@app.route('/capture_mode', methods=['POST'])
-def capture_mode():
+@app.route('/capture_image', methods=['POST'])
+def capture_image():
    
-   return render_template(VideoCamera.capture())
+   return render_template(VideoCameraForCapture.capture_image())
 
 
 

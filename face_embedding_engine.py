@@ -125,7 +125,7 @@ def get_image_dimensions_for_embedding_model(embedding_model):
         A tuple of the required width,height dimensions for images used by the given embedding model
     '''
     result = None
-    if embedding_model in (FaceEmbeddingModelEnum.CELEBRITY_KERAS, FaceEmbeddingModelEnum.CELEBRITY_TFLITE):
+    if embedding_model is FaceEmbeddingModelEnum.CELEBRITY_TFLITE:
         result = (160, 160)
     else:
         raise Exception("Invalid embedding model: {}".format(embedding_model))
