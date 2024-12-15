@@ -21,7 +21,6 @@ class FaceDetectionMethodEnum(Enum):
 
         Enumerates all methods supported for detecting faces
     '''
-    MTCNN = 1 # currently only supported on Ubuntu
     SSD_MOBILENET_V2 = 2 # currently only supported on Coral dev board
 
 class FaceDetectionEngine:
@@ -47,12 +46,7 @@ class FaceDetectionEngine:
         # pylint: disable=import-outside-toplevel, import-error
 
         self.detection_method = detection_method
-        if self.detection_method == FaceDetectionMethodEnum.MTCNN:
-            # create the MTCNN detector, using default weights
-            print("Using MTCNN for face detection")
-            from mtcnn.mtcnn import MTCNN
-            self.face_detection_engine = MTCNN()
-        elif self.detection_method == FaceDetectionMethodEnum.SSD_MOBILENET_V2:
+        if self.detection_method == FaceDetectionMethodEnum.SSD_MOBILENET_V2:
             # load the MobileNet V2 SSD Face model
             print("Using SSD MobileNet V2 for face detection")
             from edgetpu.detection.engine import DetectionEngine
@@ -77,39 +71,28 @@ class FaceDetectionEngine:
         results = [] # assume no faces are detected
 
         # detect faces in the image
-        if self.detection_method == FaceDetectionMethodEnum.MTCNN:
-            detected_faces = self.face_detection_engine.detect_faces(rgb_array)
+        # DetectionMethod.SSD_MOBILENET_V2
+        frame_as_image = Image.fromarray(rgb_array)
+        detected_faces = self.face_detection_engine.detect_with_image(
+            frame_as_image,
+            threshold=0.5,
+            keep_aspect_ratio=True,
+            relative_coord=False,
+            top_k=5,
+            resample=Image.BOX)
 
-            # extract the bounding box from the first face
-            if len(detected_faces) == 0:
-                return results
+        if len(detected_faces) == 0:
+            return results
 
-            for detected_face in detected_faces:
-                # note the bounding box is in the format we want
-                results.append(tuple(detected_face['box']))
-
-        else: # DetectionMethod.SSD_MOBILENET_V2
-            frame_as_image = Image.fromarray(rgb_array)
-            detected_faces = self.face_detection_engine.detect_with_image(
-                frame_as_image,
-                threshold=0.5,
-                keep_aspect_ratio=True,
-                relative_coord=False,
-                top_k=5,
-                resample=Image.BOX)
-
-            if len(detected_faces) == 0:
-                return results
-
-            # extract the bounding box from the first face
-            for detected_face in detected_faces:
-                # convert the bounding box to the format we want
-                x_1, y_1, x_2, y_2 = detected_face.bounding_box.flatten().astype("int")
-                width = abs(x_2 - x_1)
-                height = abs(y_2 - y_1)
-                result = (x_1, y_1, width, height)
-                results.append(result)
-
+        # extract the bounding box from the first face
+        for detected_face in detected_faces:
+            # convert the bounding box to the format we want
+            x_1, y_1, x_2, y_2 = detected_face.bounding_box.flatten().astype("int")
+            width = abs(x_2 - x_1)
+            height = abs(y_2 - y_1)
+            result = (x_1, y_1, width, height)
+            results.append(result)
+            
         return results
 
     def extract_face(self, rgb_array, embedding_model):

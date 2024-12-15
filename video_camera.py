@@ -11,7 +11,7 @@
              camera is blocking so moving this to its own thread improves
              overall performance.
 '''
-
+import os
 import select
 import threading
 import time
@@ -28,7 +28,7 @@ from cv2 import VideoCapture, \
                 cvtColor, \
                 imencode, \
                 imwrite, \
-                waitKey
+                waitKey, destroyAllWindows
 
 from numpy import array as np_array
 #from evdev import InputDevice, ecodes
@@ -36,7 +36,7 @@ from numpy import array as np_array
 from face_detector import FaceDetector
 from face_detection_engine import FaceDetectionMethodEnum
 from face_embedding_engine import FaceEmbeddingModelEnum
-from utils import PRINT_PERFORMANCE_INFO, is_ubuntu_64, is_coral_dev_board
+from utils import PRINT_PERFORMANCE_INFO
 
 # We use descriptive variable and function names so
 # disable the pylint warning for long lines
@@ -76,34 +76,15 @@ class VideoCamera():
         self.video.set(CAP_PROP_FRAME_HEIGHT, CAMERA_RESOLUTION[1])
         print("Camera FPS set at {:4.1f}".format(self.video.get(CAP_PROP_FPS)))
 
-        self.capture_images_mode = capture_images
-        self.detect_only = detect_only
 
-        if not self.capture_images_mode:
-            # load face detection engine
-            if is_ubuntu_64:
-                face_detection_method = FaceDetectionMethodEnum.MTCNN
-                embedding_model = FaceEmbeddingModelEnum.CELEBRITY_KERAS
-            elif is_coral_dev_board:
-                face_detection_method = FaceDetectionMethodEnum.SSD_MOBILENET_V2
-                embedding_model = FaceEmbeddingModelEnum.CELEBRITY_TFLITE
-            else:
-                raise Exception("Unsupported platform")
+        
+        face_detection_method = FaceDetectionMethodEnum.SSD_MOBILENET_V2
+        embedding_model = FaceEmbeddingModelEnum.CELEBRITY_TFLITE
+        
+        
 
-            self.face_detector = FaceDetector(face_detection_method, embedding_model)
-        else:
-            print("Starting up in image capture mode")
-            if is_ubuntu_64:
-                # required in order to be able to get key presses
-                namedWindow('frame', WINDOW_NORMAL)
-            elif is_coral_dev_board:
-                # On Coral dev board, use mouse plugged into USB port beside ethernet connector
-                self.key_select = select.poll()
-                self.input_dev = InputDevice('/dev/video1')
-                self.key_select.register(self.input_dev, select.POLLIN)
-            else:
-                raise Exception("Unsupported platform")
-            self.captured_image_count = 0
+        self.face_detector = FaceDetector(face_detection_method, embedding_model)
+
 
         # initialize shared variables and the protecting semaphore lock
         self.frame_as_rgb_array = None # stores the last frame read
@@ -194,93 +175,125 @@ class VideoCamera():
             return None
 
         new_frame = None
-        if not self.capture_images_mode:
-            if PRINT_PERFORMANCE_INFO:
-                print("============================================")
-                start_time = time.monotonic()
+        
+        if PRINT_PERFORMANCE_INFO:
+            print("============================================")
+            start_time = time.monotonic()
 
-            # convert frame to RGB which the face detector requires
-            rgb_array = cvtColor(self.frame_as_rgb_array, COLOR_BGR2RGB)
+        # convert frame to RGB which the face detector requires
+        rgb_array = cvtColor(self.frame_as_rgb_array, COLOR_BGR2RGB)
 
-            # clear shared data and release lock ASAP
-            self.frame_as_rgb_array = None
-            self.status = False
-            self.lock_frame.release()
-            if PRINT_PERFORMANCE_INFO:
-                print("Convert to RGB array time: {:.3f}s".format(time.monotonic() - start_time))
-                start_time = time.monotonic()
+        # clear shared data and release lock ASAP
+        self.frame_as_rgb_array = None
+        self.status = False
+        self.lock_frame.release()
+        if PRINT_PERFORMANCE_INFO:
+            print("Convert to RGB array time: {:.3f}s".format(time.monotonic() - start_time))
+            start_time = time.monotonic()
 
 
-            # identify any faces in the picture
-            frame_as_image = self.face_detector.identify_faces_in_frame(rgb_array, self.detect_only)
-            if PRINT_PERFORMANCE_INFO:
-                print("    Total face processing: {:.3f}s".format(time.monotonic() - start_time))
-                start_time = time.monotonic()
+        # identify any faces in the picture
+        frame_as_image = self.face_detector.identify_faces_in_frame(rgb_array)
+        if PRINT_PERFORMANCE_INFO:
+            print("    Total face processing: {:.3f}s".format(time.monotonic() - start_time))
+            start_time = time.monotonic()
 
-            # convert PIL Image back to streamable frame format (array of pixels)
-            rgb_array = np_array(frame_as_image)
-            # Convert RGB to BGR
-            frame = cvtColor(rgb_array, COLOR_RGB2BGR)
+        # convert PIL Image back to streamable frame format (array of pixels)
+        rgb_array = np_array(frame_as_image)
+        # Convert RGB to BGR
+        frame = cvtColor(rgb_array, COLOR_RGB2BGR)
 
-            ret_val, jpeg_image = imencode('.jpg', frame)
-            if ret_val:
-                new_frame = jpeg_image.tobytes()
+        ret_val, jpeg_image = imencode('.jpg', frame)
+        if ret_val:
+            new_frame = jpeg_image.tobytes()
 
-            if PRINT_PERFORMANCE_INFO:
-                print("Convert to jpg time: {:.3f}s".format(time.monotonic() - start_time))
-        else:
-            # save the current image
-            self.capture_image_locked()
-
-            ret_val, jpeg_image = imencode('.jpg', self.frame_as_rgb_array)
-            if ret_val:
-                new_frame = jpeg_image.tobytes()
-
-            # clear shared data and release lock
-            self.frame_as_rgb_array = None
-            self.status = False
-            self.lock_frame.release()
+        if PRINT_PERFORMANCE_INFO:
+            print("Convert to jpg time: {:.3f}s".format(time.monotonic() - start_time))
+        
 
         return new_frame
+    
 
-    def capture_image_locked(self):
-        ''' function capture_image_with_lock
+class VideoCameraForCapture():
 
-        Save the current video frame to file
+    def __init__(self):
+        print("Camera images being processed at resolution: {}".format(CAMERA_RESOLUTION))
+        destroyAllWindows()
+        self.video = VideoCapture(0)
+        self.video.set(CAP_PROP_FRAME_WIDTH, CAMERA_RESOLUTION[0])
+        self.video.set(CAP_PROP_FRAME_HEIGHT, CAMERA_RESOLUTION[1])
+        print("Camera FPS set at {:4.1f}".format(self.video.get(CAP_PROP_FPS)))
+        self.frame_as_rgb_array = None # stores the last frame read
+        self.success = False
+        
+    def generate_frames(self):
+        # load camera
+        
+        
+        while True:  
+            self.success, frame = self.video.read()  
+            if not self.success:
+                break
+            else:
+                # Encode frame as JPEG
+                _, buffer = imencode('.jpg', frame)
+                frame_bytes = buffer.tobytes()
+                yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                self.frame_as_rgb_array = frame
 
-        The semaphore lock should be acquired before calling this function
 
-        Args:
-            None
+    def capture_image(self):
+        success, frame = self.video.read() 
+        # Ensure training_data directory exists
+        os.makedirs('training_data', exist_ok=True)
+        # Create a unique filename with timestamp
+        timestamp = int(time.time())
+        filename = f"training_data/captured_image_{timestamp}.jpg"
+        # Save the image
+        imwrite(filename, frame)
+        print(f"Image captured and saved to {filename}")
 
-        Returns:
-            None
-        '''
+        return 'capture.html'
 
-        capture_image = False
+    # def capture_image_locked(self):
+    #     ''' function capture_image_with_lock
 
-        # detect input from user
-        # On Ubuntu laptop, look for keyboard spacebar being pressed.
-        # On Coral dev board, connect mouse to USB port next to network
-        # connector and look for left mouse press.
-        if is_ubuntu_64:
-            # get key from keyboard
-            key = waitKey(1)
-            if key & 0xFF == ord(' '):
-                capture_image = True
-        elif is_coral_dev_board:
-            # On Coral dev board, get mouse click
-            events = self.key_select.poll(1)
-            if events:
-                for event in self.input_dev.read():
-                    if event.type == ecodes.EV_KEY and \
-                            event.code == ecodes.BTN_LEFT and event.value == 1:
-                        capture_image = True
-        else:
-            raise Exception("Unsupported platform")
+    #     Save the current video frame to file
 
-        if capture_image:
-            self.captured_image_count += 1
-            output_filename = "captured_image_"+str(self.captured_image_count)+".jpg"
-            imwrite(output_filename, self.frame_as_rgb_array)
-            print("Captured image: "+output_filename)
+    #     The semaphore lock should be acquired before calling this function
+
+    #     Args:
+    #         None
+
+    #     Returns:
+    #         None
+    #     '''
+
+    #     capture_image = False
+
+    #     # detect input from user
+    #     # On Ubuntu laptop, look for keyboard spacebar being pressed.
+    #     # On Coral dev board, connect mouse to USB port next to network
+    #     # connector and look for left mouse press.
+    #     if is_ubuntu_64:
+    #         # get key from keyboard
+    #         key = waitKey(1)
+    #         if key & 0xFF == ord(' '):
+    #             capture_image = True
+    #     elif is_coral_dev_board:
+    #         # On Coral dev board, get mouse click
+    #         events = self.key_select.poll(1)
+    #         if events:
+    #             for event in self.input_dev.read():
+    #                 if event.type == ecodes.EV_KEY and \
+    #                         event.code == ecodes.BTN_LEFT and event.value == 1:
+    #                     capture_image = True
+    #     else:
+    #         raise Exception("Unsupported platform")
+
+    #     if capture_image:
+    #         self.captured_image_count += 1
+    #         output_filename = "captured_image_"+str(self.captured_image_count)+".jpg"
+    #         imwrite(output_filename, self.frame_as_rgb_array)
+    #         print("Captured image: "+output_filename)

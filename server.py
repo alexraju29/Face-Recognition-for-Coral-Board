@@ -52,18 +52,38 @@ def video_feed():
     returns:
         jpg frames produced by our video frame generator
     '''
-    return Response(gen(VideoCamera(args.capture, args.detect_only)),
+    return Response(gen(VideoCamera()),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# Support option to capture images
-parser = argparse.ArgumentParser()
-parser.add_argument('--capture', dest='capture', action='store_true')
-parser.set_defaults(capture=False)
-# Support option to only detect images (not try to recognize faces)
-parser.add_argument('--detect-only', dest='detect_only', action='store_true')
-parser.set_defaults(detect_only=False)
 
-args = parser.parse_args()
+@app.route('/video_feed_for_capture')
+def video_feed_for_capture():
+    ''' function video_feed()
+
+    Function that Flask will be call to retrieve individual frames for the video stream.
+
+    Args: None
+
+    returns:
+        jpg frames produced by our video frame generator
+    '''
+    return Response(gen(VideoCamera()),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/capture_mode', methods=['POST'])
+def capture_mode():
+   
+   return render_template('capture.html')
+
+
+@app.route('/capture_mode', methods=['POST'])
+def capture_mode():
+   
+   return render_template(VideoCamera.capture())
+
+
+
 
 print("Path: ", app.instance_path)
 if __name__ == '__main__':

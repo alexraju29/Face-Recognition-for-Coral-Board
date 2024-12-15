@@ -56,19 +56,11 @@ class FaceRecognizer():
 
         # Observed distances differed between Ubuntu and Coral dev board
         if MATCH_CALCULATION_METHOD == MatchDistanceCalculationMethodEnum.COSINE_MEAN:
-            if is_ubuntu_64:
-                self.matched_distance_threshold = .6
-            elif is_coral_dev_board:
-                self.matched_distance_threshold = .4
-            else:
-                raise Exception("Unsupported platform")
+            self.matched_distance_threshold = .4
+            
         elif MATCH_CALCULATION_METHOD == MatchDistanceCalculationMethodEnum.LINEAR_NORMALIZED_MEAN:
-            if is_ubuntu_64:
-                self.matched_distance_threshold = 12
-            elif is_coral_dev_board:
-                self.matched_distance_threshold = 8
-            else:
-                raise Exception("Unsupported platform")
+            self.matched_distance_threshold = 8
+            
 
         # load face embeddings for 'learned' faces
         data = load(LEARNED_FACE_EMBEDDINGS_OUTPUT_FILE)

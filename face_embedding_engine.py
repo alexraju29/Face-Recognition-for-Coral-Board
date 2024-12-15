@@ -13,7 +13,7 @@ from numpy import expand_dims, uint8 as np_uint8
 
 # Pre-trained model with MS-Celeb-1M image set (https://www.microsoft.com/en-us/research/project/ms-celeb-1m-challenge-recognizing-one-million-celebrities-real-world/)
 # Converted to Keras: https://github.com/nyoki-mtl/keras-facenet
-FACE_EMBEDDING_CELEBRITY_KERAS_MODEL_PATH = 'models/facenet_keras.h5'
+
 
 # Keras model converted to quantized tflite model (via convert_h5_to_tflite.py)
 FACE_EMBEDDING_CELEBRITY_TFLITE_MODEL_PATH = 'models/facenet_keras_edgetpu.tflite'
@@ -23,7 +23,7 @@ class FaceEmbeddingModelEnum(Enum):
 
         Enumerates all models supported for identifying faces
     '''
-    CELEBRITY_KERAS = 1  # Keras model pre-trained using  MS-Celeb-1M
+    
     CELEBRITY_TFLITE = 2 # tflite version of CELEBRITY_KERAS
 
 class FaceEmbeddingEngine:
@@ -52,18 +52,13 @@ class FaceEmbeddingEngine:
         self.embedding_model = embedding_model
         self.required_image_shape = get_image_dimensions_for_embedding_model(embedding_model) + (3,) # need 3 arrays for RGB
 
-        if self.embedding_model == FaceEmbeddingModelEnum.CELEBRITY_KERAS:
-            print("Using Celebrity trained Keras model for face embeddings")
-            from keras.models import load_model
-            self.face_embedding_engine = load_model(FACE_EMBEDDING_CELEBRITY_KERAS_MODEL_PATH, compile=False)
-        elif self.embedding_model == FaceEmbeddingModelEnum.CELEBRITY_TFLITE:
-            print("Using Celebrity trained tflite model for face embeddings")
-            from edgetpu.basic.basic_engine import BasicEngine
-            self.face_embedding_engine = BasicEngine(FACE_EMBEDDING_CELEBRITY_TFLITE_MODEL_PATH)
-            print("Embedding model input tensor shape: {}".format(self.face_embedding_engine.get_input_tensor_shape()))
-            print("Embedding model input size: {}".format(self.face_embedding_engine.required_input_array_size()))
-        else:
-            raise Exception("Invalid embedding mode method: {}".format(embedding_model))
+        
+        print("Using Celebrity trained tflite model for face embeddings")
+        from edgetpu.basic.basic_engine import BasicEngine
+        self.face_embedding_engine = BasicEngine(FACE_EMBEDDING_CELEBRITY_TFLITE_MODEL_PATH)
+        print("Embedding model input tensor shape: {}".format(self.face_embedding_engine.get_input_tensor_shape()))
+        print("Embedding model input size: {}".format(self.face_embedding_engine.required_input_array_size()))
+        
 
     def get_embedding_model(self):
         ''' function get_embedding_model
@@ -107,17 +102,13 @@ class FaceEmbeddingEngine:
         sample = expand_dims(face_pixels, axis=0)
 
         # get embedding
-        if self.embedding_model == FaceEmbeddingModelEnum.CELEBRITY_KERAS:
-            embeddings = self.face_embedding_engine.predict(sample)
-            result = embeddings[0]
-        else:
-            sample = sample.flatten()
-            # normalize values to between 0 and 255 (UINT)
-            sample *= 255.0/sample.max()
-            # convert to UNIT8
-            sample = sample.astype(np_uint8)
-            embeddings = self.face_embedding_engine.run_inference(sample)
-            result = embeddings[1]
+        sample = sample.flatten()
+        # normalize values to between 0 and 255 (UINT)
+        sample *= 255.0/sample.max()
+        # convert to UNIT8
+        sample = sample.astype(np_uint8)
+        embeddings = self.face_embedding_engine.run_inference(sample)
+        result = embeddings[1]
 
         return result
 

@@ -1,6 +1,8 @@
-<html>
-  <head>
-    <title>Facial Recognition System</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
           margin: 0;
@@ -74,17 +76,20 @@
     </style>
   </head>
   <body>
-    <h1>Facial Recognition With Coral Board</h1>
-    <img id="bg" src="{{ url_for('video_feed') }}">
+    <h1>Facial Recognition With Coral Board On caputer Mode</h1>
+    <img id="bg" src="{{ url_for('video_feed_for_capture') }}">
 
     <div class="button-container">
-      <form action="{{ url_for('capture_mode') }}" method="POST">
-          <button type="submit">Capture Mode</button>
+      <form action="{{ url_for('capture_image') }}" method="POST">
+          <button type="submit">Capture</button>
       </form>
   </div>
 
     <footer>
       &copy; 2024 Technische Hochschule Deggendorf
   </footer>
-  </body>
+</head>
+<body>
+    
+</body>
 </html>

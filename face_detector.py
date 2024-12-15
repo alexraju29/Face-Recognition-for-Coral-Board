@@ -120,18 +120,18 @@ class FaceDetector():
             # bounding box around face
             draw.rectangle(((x_1, y_1), (x_2, y_2)), outline='red')
 
-            if not detect_only:
-                # run the face recognizer on the image here
-                name_for_face, process_time = self.face_recognizer.get_name_for_face(cropped_face)
+            
+            # run the face recognizer on the image here
+            name_for_face, process_time = self.face_recognizer.get_name_for_face(cropped_face)
 
-                if name_for_face == "":
-                    name_for_face = "Unknown"
+            if name_for_face == "":
+                name_for_face = "Unknown"
 
-                # label the face
-                face_label = name_for_face + ' {:.3f}s'.format(process_time)
-                face_label_width = self.face_label_font.getsize(face_label)
-                face_label_start_x = x_1 + (x_2-x_1)/2 - face_label_width[0]/2
-                draw.text((face_label_start_x, y_2 + 5), face_label, fill='red', font=self.face_label_font)
+            # label the face
+            face_label = name_for_face + ' {:.3f}s'.format(process_time)
+            face_label_width = self.face_label_font.getsize(face_label)
+            face_label_start_x = x_1 + (x_2-x_1)/2 - face_label_width[0]/2
+            draw.text((face_label_start_x, y_2 + 5), face_label, fill='red', font=self.face_label_font)
 
         # label the current FPS as well
         annotate_text = 'Processing time: {:.3f}s'.format(time.monotonic() - self.start_time_stamp)
