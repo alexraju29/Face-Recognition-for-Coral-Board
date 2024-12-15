@@ -230,17 +230,8 @@ class VideoCameraForCapture():
     def get_frame(self):
         # load camera
         
-        while True:  
-            self.success, frame = self.video.read()  
-            if not self.success:
-                break
-            else:
-                # Encode frame as JPEG
-                _, buffer = imencode('.jpg', frame)
-                frame_bytes = buffer.tobytes()
-                yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-                self.frame_as_rgb_array = frame
+        self.success, frame = self.video.read()  
+        return frame
 
 
     def capture_image(self):
