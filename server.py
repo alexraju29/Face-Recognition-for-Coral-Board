@@ -71,11 +71,6 @@ def video_feed_for_capture():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@app.route('/capture_mode', methods=['POST'])
-def capture_mode():
-   
-   return render_template('capture.html')
-
 
 @app.route('/capture_mode', methods=['POST'])
 def capture_mode():
