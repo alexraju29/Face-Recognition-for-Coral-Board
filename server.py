@@ -57,7 +57,7 @@ def video_feed():
 
 
 
-@app.route('/capture.html')
+@app.route('/capture', methods=['POST'])
 def capture():
     ''' function index ...
 
