@@ -225,11 +225,10 @@ class VideoCameraForCapture():
         print("Camera FPS set at {:4.1f}".format(self.video.get(CAP_PROP_FPS)))
         self.frame_as_rgb_array = None # stores the last frame read
         self.success = False
-        self.generate_frames()
+        self.get_frame()
         
-    def generate_frames(self):
+    def get_frame(self):
         # load camera
-        
         
         while True:  
             self.success, frame = self.video.read()  

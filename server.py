@@ -56,6 +56,18 @@ def video_feed():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
+
+@app.route('/capture.html')
+def capture():
+    ''' function index ...
+
+    Args: None
+
+    Returns:
+        rendered index.html template
+    '''
+    return render_template('capture.html')
+
 @app.route('/video_feed_for_capture')
 def video_feed_for_capture():
     ''' function video_feed()
