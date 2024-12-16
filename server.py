@@ -78,8 +78,10 @@ def video_feed_for_capture():
 
     returns:
         jpg frames produced by our video frame generator
+
     '''
-    return Response(VideoCameraForCapture.get_frame()),
+    camera = VideoCameraForCapture()
+    return Response(camera.get_frame()),
                     
 
 
