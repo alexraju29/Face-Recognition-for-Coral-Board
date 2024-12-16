@@ -6,7 +6,7 @@
 
 
 from flask import Flask, render_template, Response
-from video_camera import VideoCamera, VideoCameraForCapture
+from video_camera_for_capture import VideoCameraForCapture
 
 app = Flask(__name__)
 
