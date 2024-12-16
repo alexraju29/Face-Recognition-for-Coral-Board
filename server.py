@@ -79,8 +79,8 @@ def video_feed_for_capture():
     returns:
         jpg frames produced by our video frame generator
     '''
-    return Response(gen(VideoCameraForCapture()),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(VideoCameraForCapture.get_frame()),
+                    
 
 
 
