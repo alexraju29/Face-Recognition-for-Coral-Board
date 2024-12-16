@@ -7,7 +7,7 @@
 import time
 import argparse
 from flask import Flask, render_template, Response
-from video_camera import VideoCamera, VideoCameraForCapture
+from video_camera import VideoCamera
 
 app = Flask(__name__)
 
@@ -20,7 +20,7 @@ def index():
     Returns:
         rendered index.html template
     '''
-    return render_template('capture.html')
+    return render_template('index.html')
 
 def gen(camera):
     ''' function gen
