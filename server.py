@@ -20,7 +20,7 @@ def index():
     Returns:
         rendered index.html template
     '''
-    return render_template('index.html')
+    return render_template('capture.html')
 
 def gen(camera):
     ''' function gen
@@ -55,41 +55,6 @@ def video_feed():
     return Response(gen(VideoCamera()),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
-
-@app.route('/capture', methods=['POST'])
-def capture():
-    ''' function index ...
-
-    Args: None
-
-    Returns:
-        rendered index.html template
-    '''
-    return render_template('capture.html')
-
-@app.route('/video_feed_for_capture')
-def video_feed_for_capture():
-    ''' function video_feed()
-
-    Function that Flask will be call to retrieve individual frames for the video stream.
-
-    Args: None
-
-    returns:
-        jpg frames produced by our video frame generator
-
-    '''
-    camera = VideoCameraForCapture()
-    return Response(camera.get_frame()),
-                    
-
-
-
-@app.route('/capture_image', methods=['POST'])
-def capture_image():
-   
-   return render_template(VideoCameraForCapture.capture_image())
 
 
 
