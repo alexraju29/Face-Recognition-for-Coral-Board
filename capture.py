@@ -1,61 +1,7 @@
-# ''' module server.py
-
-#     Purpose: implement a basic Flask web server publishing a
-#              video stream based on jpg images
-# '''
-
-
-# from flask import Flask, render_template, Response
-# from video_camera_for_capture import VideoCameraForCapture
-
-# app = Flask(__name__)
-
-
-# @app.route('/')
-# def capture():
-#     ''' function index ...
-
-#     Args: None
-
-#     Returns:
-#         rendered index.html template
-#     '''
-#     return render_template('capture.html')
-
-# @app.route('/video_feed_for_capture')
-# def video_feed_for_capture():
-#     ''' function video_feed()
-
-#     Function that Flask will be call to retrieve individual frames for the video stream.
-
-#     Args: None
-
-#     returns:
-#         jpg frames produced by our video frame generator
-
-#     '''
-#     camera = VideoCameraForCapture()
-#     return Response(camera.get_frame()),
-                    
-
-
-
-# @app.route('/capture_image', methods=['POST'])
-# def capture_image():
-   
-#    return render_template(VideoCameraForCapture.capture_image())
-
-
-# print("Path: ", app.instance_path)
-# if __name__ == '__main__':
-
-#     # start local web server
-#     app.run(host='0.0.0.0', port='5000', debug=True)
-
-
-
 import cv2
 
+# Define the directory to save images
+save_dir = 'training_data/data'
 # Initialize the webcam (use 0 for the default camera)
 camera = cv2.VideoCapture(0)
 
@@ -79,7 +25,7 @@ while image_count < max_images:
     cv2.imshow("Live Feed", frame)
 
     # Save the captured image
-    image_filename = f"captured_image_{image_count + 1}.jpg"
+    image_filename = os.path.join(save_dir, f"captured_image_{image_count + 1}.jpg")
     cv2.imwrite(image_filename, frame)
     print(f"Image {image_count + 1} saved as {image_filename}")
 
